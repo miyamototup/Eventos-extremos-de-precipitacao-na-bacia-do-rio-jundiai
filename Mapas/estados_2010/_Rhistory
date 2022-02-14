@@ -1,0 +1,512 @@
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+}
+climafinal=list()
+climafinal=list()
+#for(t in 1:length(climaord))
+climafinal=foreach(t=1:2) %dopar%
+{
+#Agregação de todas as variáveis dos elementos da lista ao nível de ano. Média das variáveis e soma do nível de precipitação total
+clima2=aggregate(climaord[[t]][,c(9:13)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), mean, na.rm=TRUE)
+pluvioano=aggregate(climaord[[t]][,c(8)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), sum, na.rm=TRUE)
+colnames(pluvioano)[4]=c("Precipitacao Total")
+#amplitude térmica temperatura máxima-temperatura mínima
+Amplitude=mean(climaord[[t]]$`Temperatura Maxima`-climaord[[t]]$`Temperatura Minima`)
+#Hora de começar a criar as variáveis
+#número de dias que choveu 0 milímetros
+semchuva=sum(climaord[[t]]$`Precipitacao Total`==0)
+entre0e1=sum(climaord[[t]]$`Precipitacao Total`>0 & climaord[[t]]$`Precipitacao Total`<=1)
+#Números de dias que choveu mais do que 1, 2,5,10 e 25mm
+maisde1mm=sum(climaord[[t]]$`Precipitacao Total`>1)
+maisde2mm=sum(climaord[[t]]$`Precipitacao Total`>2)
+maisde5mm=sum(climaord[[t]]$`Precipitacao Total`>5)
+maisde10mm=sum(climaord[[t]]$`Precipitacao Total`>10)
+maisde25mm=sum(climaord[[t]]$`Precipitacao Total`>25)
+#A ideia é criar dois vetores e depois contar sequencias dentro deles para identificar o número de dias secos
+diaseco=list()
+dia1mm=list()
+for (j in 1:length(climaord[[t]]$Codigo)){
+#Cria um vetor que atribui um a todos os dias que choveram 0 mm
+if(climaord[[t]]$`Precipitacao Total`[[j]]==0){
+a=1
+diaseco[[j]]=a
+}
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+}
+##################################################################################
+#load("C:/Users/bmiyamoto/Desktop/Bruno/Medidas/Sudeste/S?o Paulo/1-Lista climaord/climaord.RData")
+library(iterators)
+#library(parallel)
+library(doParallel)
+library(foreach)
+cl=makeCluster(2)
+registerDoParallel(cl)
+climafinal=list()
+#for(t in 1:length(climaord))
+climafinal=foreach(t=1:length(climaord)) %dopar%
+{
+#Agregação de todas as variáveis dos elementos da lista ao nível de ano. Média das variáveis e soma do nível de precipitação total
+clima2=aggregate(climaord[[t]][,c(9:13)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), mean, na.rm=TRUE)
+pluvioano=aggregate(climaord[[t]][,c(8)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), sum, na.rm=TRUE)
+colnames(pluvioano)[4]=c("Precipitacao Total")
+#amplitude térmica temperatura máxima-temperatura mínima
+Amplitude=mean(climaord[[t]]$`Temperatura Maxima`-climaord[[t]]$`Temperatura Minima`)
+#Hora de começar a criar as variáveis
+#número de dias que choveu 0 milímetros
+semchuva=sum(climaord[[t]]$`Precipitacao Total`==0)
+entre0e1=sum(climaord[[t]]$`Precipitacao Total`>0 & climaord[[t]]$`Precipitacao Total`<=1)
+#Números de dias que choveu mais do que 1, 2,5,10 e 25mm
+maisde1mm=sum(climaord[[t]]$`Precipitacao Total`>1)
+maisde2mm=sum(climaord[[t]]$`Precipitacao Total`>2)
+maisde5mm=sum(climaord[[t]]$`Precipitacao Total`>5)
+maisde10mm=sum(climaord[[t]]$`Precipitacao Total`>10)
+maisde25mm=sum(climaord[[t]]$`Precipitacao Total`>25)
+#A ideia é criar dois vetores e depois contar sequencias dentro deles para identificar o número de dias secos
+diaseco=list()
+dia1mm=list()
+for (j in 1:length(climaord[[t]]$Codigo)){
+#Cria um vetor que atribui um a todos os dias que choveram 0 mm
+if(climaord[[t]]$`Precipitacao Total`[[j]]==0){
+a=1
+diaseco[[j]]=a
+}
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+}
+rm(list= ls()[!(ls() %in% c('climafinal'))])
+load("/home/bmiyamoto/Documentos/BrunoPCAntigo/Documentos/Bruno/Soja/interpol2.RData")
+interpol2$Estacoes=0
+#Atribui valor 1 a todos os valores de primavera e verão que estejam acima de 1985
+interpol2$Estacoes[((interpol2$Dia>=23 & interpol2$Mes==9) | (interpol2$Mes==10 | interpol2$Mes==11 | interpol2$Mes==12 | interpol2$Mes==1 | interpol2$Mes==2) |(interpol2$Dia<20&interpol2$Mes==3))&(interpol2$Ano>=1985)]=1
+#Interpol2 recebe todos os valores com binária igual a 1
+interpol2=subset(interpol2, interpol2$Estacoes==1)
+#Ordena interpol2 segundo critério de codigo, ano , mes e dia
+interpol2=interpol2[order(interpol2$Codigo, interpol2$Ano,interpol2$Mes,interpol2$Dia),]
+#Cria uma variável período que divide o ano em duas partes, periodo 1 que corresponde ao verão e período 2 que corresponde a primavera
+interpol2$Periodo[(interpol2$Mes==9) | (interpol2$Mes==10) | (interpol2$Mes==11) | (interpol2$Mes==12)]=2
+interpol2$Periodo[(interpol2$Mes==1) | (interpol2$Mes==2) | (interpol2$Mes==3)]=1
+#Cria o ano soja segundo os critérios abaixo
+interpol2$Anosoja[(interpol2$Ano==1986 & interpol2$Periodo==2)|(interpol2$Ano==1987 & interpol2$Periodo==1)]=1987
+interpol2$Anosoja[(interpol2$Ano==1987 & interpol2$Periodo==2)|(interpol2$Ano==1988 & interpol2$Periodo==1)]=1988
+interpol2$Anosoja[(interpol2$Ano==1988 & interpol2$Periodo==2)|(interpol2$Ano==1989 & interpol2$Periodo==1)]=1989
+interpol2$Anosoja[(interpol2$Ano==1989 & interpol2$Periodo==2)|(interpol2$Ano==1990 & interpol2$Periodo==1)]=1990
+interpol2$Anosoja[(interpol2$Ano==1990 & interpol2$Periodo==2)|(interpol2$Ano==1991 & interpol2$Periodo==1)]=1991
+interpol2$Anosoja[(interpol2$Ano==1991 & interpol2$Periodo==2)|(interpol2$Ano==1992 & interpol2$Periodo==1)]=1992
+interpol2$Anosoja[(interpol2$Ano==1992 & interpol2$Periodo==2)|(interpol2$Ano==1993 & interpol2$Periodo==1)]=1993
+interpol2$Anosoja[(interpol2$Ano==1993 & interpol2$Periodo==2)|(interpol2$Ano==1994 & interpol2$Periodo==1)]=1994
+interpol2$Anosoja[(interpol2$Ano==1994 & interpol2$Periodo==2)|(interpol2$Ano==1995 & interpol2$Periodo==1)]=1995
+interpol2$Anosoja[(interpol2$Ano==1995 & interpol2$Periodo==2)|(interpol2$Ano==1996 & interpol2$Periodo==1)]=1996
+interpol2$Anosoja[(interpol2$Ano==1996 & interpol2$Periodo==2)|(interpol2$Ano==1997 & interpol2$Periodo==1)]=1997
+interpol2$Anosoja[(interpol2$Ano==1997 & interpol2$Periodo==2)|(interpol2$Ano==1998 & interpol2$Periodo==1)]=1998
+interpol2$Anosoja[(interpol2$Ano==1998 & interpol2$Periodo==2)|(interpol2$Ano==1999 & interpol2$Periodo==1)]=1999
+interpol2$Anosoja[(interpol2$Ano==1999 & interpol2$Periodo==2)|(interpol2$Ano==2000 & interpol2$Periodo==1)]=2000
+interpol2$Anosoja[(interpol2$Ano==2000 & interpol2$Periodo==2)|(interpol2$Ano==2001 & interpol2$Periodo==1)]=2001
+interpol2$Anosoja[(interpol2$Ano==2001 & interpol2$Periodo==2)|(interpol2$Ano==2002 & interpol2$Periodo==1)]=2002
+interpol2$Anosoja[(interpol2$Ano==2002 & interpol2$Periodo==2)|(interpol2$Ano==2003 & interpol2$Periodo==1)]=2003
+interpol2$Anosoja[(interpol2$Ano==2003 & interpol2$Periodo==2)|(interpol2$Ano==2004 & interpol2$Periodo==1)]=2004
+interpol2$Anosoja[(interpol2$Ano==2004 & interpol2$Periodo==2)|(interpol2$Ano==2005 & interpol2$Periodo==1)]=2005
+interpol2$Anosoja[(interpol2$Ano==2005 & interpol2$Periodo==2)|(interpol2$Ano==2006 & interpol2$Periodo==1)]=2006
+interpol2$Anosoja[(interpol2$Ano==2006 & interpol2$Periodo==2)|(interpol2$Ano==2007 & interpol2$Periodo==1)]=2007
+interpol2$Anosoja[(interpol2$Ano==2007 & interpol2$Periodo==2)|(interpol2$Ano==2008 & interpol2$Periodo==1)]=2008
+interpol2$Anosoja[(interpol2$Ano==2008 & interpol2$Periodo==2)|(interpol2$Ano==2009 & interpol2$Periodo==1)]=2009
+interpol2$Anosoja[(interpol2$Ano==2009 & interpol2$Periodo==2)|(interpol2$Ano==2010 & interpol2$Periodo==1)]=2010
+interpol2$Anosoja[(interpol2$Ano==2010 & interpol2$Periodo==2)|(interpol2$Ano==2011 & interpol2$Periodo==1)]=2011
+interpol2$Anosoja[(interpol2$Ano==2011 & interpol2$Periodo==2)|(interpol2$Ano==2012 & interpol2$Periodo==1)]=2012
+interpol2$Anosoja[(interpol2$Ano==2012 & interpol2$Periodo==2)|(interpol2$Ano==2013 & interpol2$Periodo==1)]=2013
+interpol2$Anosoja[(interpol2$Ano==2013 & interpol2$Periodo==2)|(interpol2$Ano==2014 & interpol2$Periodo==1)]=2014
+#Diveide a base em uma lista por código e pelo período soja
+climaord=split(interpol2, paste(Anosoja=interpol2$Anosoja, Codigo=interpol2$Codigo))
+rm(list= ls()[!(ls() %in% c('climaord'))])
+t=1
+library(iterators)
+#library(parallel)
+library(doParallel)
+library(foreach)
+cl=makeCluster(2)
+registerDoParallel(cl)
+climafinal=list()
+#for(t in 1:length(climaord))
+clima2=aggregate(climaord[[t]][,c(9:13)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), mean, na.rm=TRUE)
+pluvioano=aggregate(climaord[[t]][,c(8)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), sum, na.rm=TRUE)
+colnames(pluvioano)[4]=c("Precipitacao Total")
+#amplitude térmica temperatura máxima-temperatura mínima
+Amplitude=mean(climaord[[t]]$`Temperatura Maxima`-climaord[[t]]$`Temperatura Minima`)
+#Hora de começar a criar as variáveis
+#número de dias que choveu 0 milímetros
+semchuva=sum(climaord[[t]]$`Precipitacao Total`==0)
+entre0e1=sum(climaord[[t]]$`Precipitacao Total`>0 & climaord[[t]]$`Precipitacao Total`<=1)
+#Números de dias que choveu mais do que 1, 2,5,10 e 25mm
+maisde1mm=sum(climaord[[t]]$`Precipitacao Total`>1)
+maisde2mm=sum(climaord[[t]]$`Precipitacao Total`>2)
+maisde5mm=sum(climaord[[t]]$`Precipitacao Total`>5)
+maisde10mm=sum(climaord[[t]]$`Precipitacao Total`>10)
+maisde25mm=sum(climaord[[t]]$`Precipitacao Total`>25)
+#A ideia é criar dois vetores e depois contar sequencias dentro deles para identificar o número de dias secos
+diaseco=list()
+dia1mm=list()
+for (j in 1:length(climaord[[t]]$Codigo)){
+#Cria um vetor que atribui um a todos os dias que choveram 0 mm
+if(climaord[[t]]$`Precipitacao Total`[[j]]==0){
+a=1
+diaseco[[j]]=a
+}
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+View(dadosclimaano)
+library(iterators)
+#library(parallel)
+library(doParallel)
+library(foreach)
+cl=makeCluster(2)
+registerDoParallel(cl)
+climafinal=list()
+#for(t in 1:length(climaord))
+climafinal=foreach(t=1:length(climaord)) %dopar%
+{
+#Agregação de todas as variáveis dos elementos da lista ao nível de ano. Média das variáveis e soma do nível de precipitação total
+clima2=aggregate(climaord[[t]][,c(9:13)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), mean, na.rm=TRUE)
+pluvioano=aggregate(climaord[[t]][,c(8)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), sum, na.rm=TRUE)
+colnames(pluvioano)[4]=c("Precipitacao Total")
+#amplitude térmica temperatura máxima-temperatura mínima
+Amplitude=mean(climaord[[t]]$`Temperatura Maxima`-climaord[[t]]$`Temperatura Minima`)
+#Hora de começar a criar as variáveis
+#número de dias que choveu 0 milímetros
+semchuva=sum(climaord[[t]]$`Precipitacao Total`==0)
+entre0e1=sum(climaord[[t]]$`Precipitacao Total`>0 & climaord[[t]]$`Precipitacao Total`<=1)
+#Números de dias que choveu mais do que 1, 2,5,10 e 25mm
+maisde1mm=sum(climaord[[t]]$`Precipitacao Total`>1)
+maisde2mm=sum(climaord[[t]]$`Precipitacao Total`>2)
+maisde5mm=sum(climaord[[t]]$`Precipitacao Total`>5)
+maisde10mm=sum(climaord[[t]]$`Precipitacao Total`>10)
+maisde25mm=sum(climaord[[t]]$`Precipitacao Total`>25)
+#A ideia é criar dois vetores e depois contar sequencias dentro deles para identificar o número de dias secos
+diaseco=list()
+dia1mm=list()
+for (j in 1:length(climaord[[t]]$Codigo)){
+#Cria um vetor que atribui um a todos os dias que choveram 0 mm
+if(climaord[[t]]$`Precipitacao Total`[[j]]==0){
+a=1
+diaseco[[j]]=a
+}
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+}
+View(climaord[[6917]])
+climaord[[6917]]$Anosoja
+load("/home/bmiyamoto/Documentos/BrunoPCAntigo/Documentos/Bruno/Soja/interpol2.RData")
+interpol2$Estacoes=0
+#Atribui valor 1 a todos os valores de primavera e verão que estejam acima de 1985
+interpol2$Estacoes[((interpol2$Dia>=23 & interpol2$Mes==9) | (interpol2$Mes==10 | interpol2$Mes==11 | interpol2$Mes==12 | interpol2$Mes==1 | interpol2$Mes==2) |(interpol2$Dia<20&interpol2$Mes==3))&(interpol2$Ano>=1985)]=1
+#Interpol2 recebe todos os valores com binária igual a 1
+interpol2=subset(interpol2, interpol2$Estacoes==1)
+#Ordena interpol2 segundo critério de codigo, ano , mes e dia
+interpol2=interpol2[order(interpol2$Codigo, interpol2$Ano,interpol2$Mes,interpol2$Dia),]
+#Cria uma variável período que divide o ano em duas partes, periodo 1 que corresponde ao verão e período 2 que corresponde a primavera
+interpol2$Periodo[(interpol2$Mes==9) | (interpol2$Mes==10) | (interpol2$Mes==11) | (interpol2$Mes==12)]=2
+interpol2$Periodo[(interpol2$Mes==1) | (interpol2$Mes==2) | (interpol2$Mes==3)]=1
+#Cria o ano soja segundo os critérios abaixo
+interpol2$Anosoja=0
+interpol2$Anosoja[(interpol2$Ano==1986 & interpol2$Periodo==2)|(interpol2$Ano==1987 & interpol2$Periodo==1)]=1987
+interpol2$Anosoja[(interpol2$Ano==1987 & interpol2$Periodo==2)|(interpol2$Ano==1988 & interpol2$Periodo==1)]=1988
+interpol2$Anosoja[(interpol2$Ano==1988 & interpol2$Periodo==2)|(interpol2$Ano==1989 & interpol2$Periodo==1)]=1989
+interpol2$Anosoja[(interpol2$Ano==1989 & interpol2$Periodo==2)|(interpol2$Ano==1990 & interpol2$Periodo==1)]=1990
+interpol2$Anosoja[(interpol2$Ano==1990 & interpol2$Periodo==2)|(interpol2$Ano==1991 & interpol2$Periodo==1)]=1991
+interpol2$Anosoja[(interpol2$Ano==1991 & interpol2$Periodo==2)|(interpol2$Ano==1992 & interpol2$Periodo==1)]=1992
+interpol2$Anosoja[(interpol2$Ano==1992 & interpol2$Periodo==2)|(interpol2$Ano==1993 & interpol2$Periodo==1)]=1993
+interpol2$Anosoja[(interpol2$Ano==1993 & interpol2$Periodo==2)|(interpol2$Ano==1994 & interpol2$Periodo==1)]=1994
+interpol2$Anosoja[(interpol2$Ano==1994 & interpol2$Periodo==2)|(interpol2$Ano==1995 & interpol2$Periodo==1)]=1995
+interpol2$Anosoja[(interpol2$Ano==1995 & interpol2$Periodo==2)|(interpol2$Ano==1996 & interpol2$Periodo==1)]=1996
+interpol2$Anosoja[(interpol2$Ano==1996 & interpol2$Periodo==2)|(interpol2$Ano==1997 & interpol2$Periodo==1)]=1997
+interpol2$Anosoja[(interpol2$Ano==1997 & interpol2$Periodo==2)|(interpol2$Ano==1998 & interpol2$Periodo==1)]=1998
+interpol2$Anosoja[(interpol2$Ano==1998 & interpol2$Periodo==2)|(interpol2$Ano==1999 & interpol2$Periodo==1)]=1999
+interpol2$Anosoja[(interpol2$Ano==1999 & interpol2$Periodo==2)|(interpol2$Ano==2000 & interpol2$Periodo==1)]=2000
+interpol2$Anosoja[(interpol2$Ano==2000 & interpol2$Periodo==2)|(interpol2$Ano==2001 & interpol2$Periodo==1)]=2001
+interpol2$Anosoja[(interpol2$Ano==2001 & interpol2$Periodo==2)|(interpol2$Ano==2002 & interpol2$Periodo==1)]=2002
+interpol2$Anosoja[(interpol2$Ano==2002 & interpol2$Periodo==2)|(interpol2$Ano==2003 & interpol2$Periodo==1)]=2003
+interpol2$Anosoja[(interpol2$Ano==2003 & interpol2$Periodo==2)|(interpol2$Ano==2004 & interpol2$Periodo==1)]=2004
+interpol2$Anosoja[(interpol2$Ano==2004 & interpol2$Periodo==2)|(interpol2$Ano==2005 & interpol2$Periodo==1)]=2005
+interpol2$Anosoja[(interpol2$Ano==2005 & interpol2$Periodo==2)|(interpol2$Ano==2006 & interpol2$Periodo==1)]=2006
+interpol2$Anosoja[(interpol2$Ano==2006 & interpol2$Periodo==2)|(interpol2$Ano==2007 & interpol2$Periodo==1)]=2007
+interpol2$Anosoja[(interpol2$Ano==2007 & interpol2$Periodo==2)|(interpol2$Ano==2008 & interpol2$Periodo==1)]=2008
+interpol2$Anosoja[(interpol2$Ano==2008 & interpol2$Periodo==2)|(interpol2$Ano==2009 & interpol2$Periodo==1)]=2009
+interpol2$Anosoja[(interpol2$Ano==2009 & interpol2$Periodo==2)|(interpol2$Ano==2010 & interpol2$Periodo==1)]=2010
+interpol2$Anosoja[(interpol2$Ano==2010 & interpol2$Periodo==2)|(interpol2$Ano==2011 & interpol2$Periodo==1)]=2011
+interpol2$Anosoja[(interpol2$Ano==2011 & interpol2$Periodo==2)|(interpol2$Ano==2012 & interpol2$Periodo==1)]=2012
+interpol2$Anosoja[(interpol2$Ano==2012 & interpol2$Periodo==2)|(interpol2$Ano==2013 & interpol2$Periodo==1)]=2013
+interpol2$Anosoja[(interpol2$Ano==2013 & interpol2$Periodo==2)|(interpol2$Ano==2014 & interpol2$Periodo==1)]=2014
+#Diveide a base em uma lista por código e pelo período soja
+climaord=split(interpol2, paste(Anosoja=interpol2$Anosoja, Codigo=interpol2$Codigo))
+rm(list= ls()[!(ls() %in% c('climaord'))])
+#load("C:/Users/bmiyamoto/Desktop/Bruno/Medidas/Sudeste/S?o Paulo/1-Lista climaord/climaord.RData")
+library(iterators)
+#library(parallel)
+library(doParallel)
+library(foreach)
+cl=makeCluster(2)
+registerDoParallel(cl)
+climafinal=list()
+#for(t in 1:length(climaord))
+climafinal=foreach(t=1:length(climaord)) %dopar%
+{
+if (climaord[[t]]$Anosoja>0){
+#Agregação de todas as variáveis dos elementos da lista ao nível de ano. Média das variáveis e soma do nível de precipitação total
+clima2=aggregate(climaord[[t]][,c(9:13)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), mean, na.rm=TRUE)
+pluvioano=aggregate(climaord[[t]][,c(8)], by=list(Codigo=climaord[[t]]$Codigo, Municipio=climaord[[t]]$Municipio, Anosoja=climaord[[t]]$Anosoja), sum, na.rm=TRUE)
+colnames(pluvioano)[4]=c("Precipitacao Total")
+#amplitude térmica temperatura máxima-temperatura mínima
+Amplitude=mean(climaord[[t]]$`Temperatura Maxima`-climaord[[t]]$`Temperatura Minima`)
+#Hora de começar a criar as variáveis
+#número de dias que choveu 0 milímetros
+semchuva=sum(climaord[[t]]$`Precipitacao Total`==0)
+entre0e1=sum(climaord[[t]]$`Precipitacao Total`>0 & climaord[[t]]$`Precipitacao Total`<=1)
+#Números de dias que choveu mais do que 1, 2,5,10 e 25mm
+maisde1mm=sum(climaord[[t]]$`Precipitacao Total`>1)
+maisde2mm=sum(climaord[[t]]$`Precipitacao Total`>2)
+maisde5mm=sum(climaord[[t]]$`Precipitacao Total`>5)
+maisde10mm=sum(climaord[[t]]$`Precipitacao Total`>10)
+maisde25mm=sum(climaord[[t]]$`Precipitacao Total`>25)
+#A ideia é criar dois vetores e depois contar sequencias dentro deles para identificar o número de dias secos
+diaseco=list()
+dia1mm=list()
+for (j in 1:length(climaord[[t]]$Codigo)){
+#Cria um vetor que atribui um a todos os dias que choveram 0 mm
+if(climaord[[t]]$`Precipitacao Total`[[j]]==0){
+a=1
+diaseco[[j]]=a
+}
+else{
+diaseco[[j]]=0
+}
+if(climaord[[t]]$`Precipitacao Total`[[j]]<1){
+b=2
+dia1mm[[j]]=b
+}
+else{
+dia1mm[[j]]=0
+}
+}
+#o argumento c(do.call("cbind",diaseco) converte uma lista em um vetor . do.call(rbind.data.frame,lista) converte lista em data frame
+#colocando o comando rle antes de tudo me permite calcular as sequencias posteriormente com o
+#comando diaseco2$lengths[diaseco2$values==1]
+diaseco2=rle(c(do.call("cbind",diaseco)))
+diaseco3=diaseco2$lengths[diaseco2$values==1]
+#numero máximo de dias consecutivos sem chover no ano
+diaseco4=max(diaseco3)
+#Quantidade de dias que choveu menos do que 1 mm
+dia1mm2=rle(c(do.call("cbind",dia1mm)))
+dia1mm3=dia1mm2$lengths[dia1mm2$values==2]
+#Número máximo de dias consecutivos que choveu apenas no máximo 1mm
+dia1mmm4=max(dia1mm3)
+dadosclimaano=cbind(clima2,pluvioano[4],Amplitude, semchuva,entre0e1,maisde1mm,maisde2mm,maisde5mm,maisde10mm,maisde25mm, diaseco4,dia1mmm4)
+#climafinal[[t]]=cbind(dadosclimaano)
+dadosclimaano
+}
+}
+rm(list= ls()[!(ls() %in% c('climafinal'))])
+climafinal2=do.call(rbind.data.frame,climafinal)
+View(climafinal2)
+install.packages("maptools", dep=TRUE)
+install.packages("RColorBrewer", dep=TRUE)
+install.packages("plotrix", dep=TRUE)
+install.packages("classInt", dep=TRUE)
+library(maptools)
+library('maptools')
+library(maptools)
+library(maptools)
+require(maptools)
+setwd("/home/bmiyamoto/Documentos/Pesquisa/Criando mapas no R/Shapefiles/estados_2010")
+mapa=readShapeSpatial(file.choose(estados_2010.shp))
+install.packages("maptools", dep=TRUE)
+install.packages("maptools")
+library(maptools)
+install.packages("maptools")
+install.packages("sp")
+install.packages("~/Downloads/sp_1.2-1.tar.gz", repos = NULL, type = "source")
+install.packages("~/Downloads/sp_1.2-1.tar.gz", repos = NULL, type = "source")
+install.packages("~/Downloads/sp_1.2-1.tar.gz", repos = NULL, type = "source")
+install.packages("maptools")
+install.packages("RColorBrewer", dep=TRUE)
+install.packages("plotrix", dep=TRUE)
+install.packages("classInt", dep=TRUE)
+library(maptools)
+setwd("/home/bmiyamoto/Documentos/Pesquisa/Criando mapas no R/Shapefiles/estados_2010")
+mapa=readShapeSpatial(file.choose(estados_2010.shp))
+mapa=readShapeSpatial(file.choose(estados_2010))
+mapa=readShapeSpatial(file.choose("/home/bmiyamoto/Documentos/Pesquisa/Criando mapas no R/Shapefiles/estados_2010/estados_2010.shp"))
+mapa=readShapeSpatial(file.choose("/home/bmiyamoto/Documentos/Pesquisa/Criando mapas no R/Shapefiles/estados_2010"))
+summary(mapa)
+summary(mapa,26)
+names(mapa)
+head(mapa)
+View(mapa)
+mapa=readShapeSpatial(file.choose())
+names(mapa)
+dados=rnorm(nrow(mapa$dados))
+dados=rnorm(nrow(mapa@dados))
+dados=rnorm(nrow(mapa@data))
+dados
+max(dados)
+min(dados)
+intervalos=c(-Inf, -1,-0.5,0,0.5,1,1.5,2,2.5,3,Inf)
+intervalos
+intervalos=r(-Inf, -1,-0.5,0,0.5,1,1.5,2,2.5,3,Inf)
+intervalos
+corte=cut(dados,intervalos)
+corte
+corte=cut(dados,intervalos, include.lowest = TRUE)
+corte
+niveis=levels(cortes)
+niveis=levels(corte)
+niveis
+corte
+niveis
+cores=heat.colors(length(niveis))
+cores
+niveis
+cores
+plot(mapa, border=gray(0.9),lwd=.4, axes=FALSE,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=FALSE,col=as.character(niveis))
+plot(mapa, border=gray(0.9),lwd=.4, axes=FALSE,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=TRUE,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=TRUE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=TRUE,las=2,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=TRUE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=TRUE,las=3,col=as.character(cores))
+plot(mapa, border=gray(0.9),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.1),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.8),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.8),lwd=.1, axes=FALSE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.1),lwd=.1, axes=FALSE,las=1,col=as.character(cores))
+plot(mapa, border=gray(0.1),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+legend("bottomleft", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
+legend("bottomleft", niveis, fill=cores, bty="n", title="Distribuição normal", cex=10 )
+plot(mapa, border=gray(0.1),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+legend("bottomleft", niveis, fill=cores, bty="s", title="Distribuição normal", cex=1 )
+legend("bottomleft", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
+plot(mapa, border=gray(0.1),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+legend("bottomleft", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
+plot(mapa, border=gray(0.1),lwd=.4, axes=FALSE,las=1,col=as.character(cores))
+legend("upleft", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
+legend("bottomright", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
+legend("left", niveis, fill=cores, bty="n", title="Distribuição normal", cex=1 )
