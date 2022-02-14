@@ -1,0 +1,2 @@
+# Eventos-extremos-de-precipitacao-na-bacia-do-rio-jundiai
+Este trabalho foi desenvolvido com o objetivo de avaliar como a Bacia do Rio Jundiaí, presente em um dos principais polos econômicos do estado de São Paulo, tem sofrido com a ocorrência de eventos extremos de precipitação. Para isso, dados de precipitação correspondente ao período 1961-2014 foram utilizados para calcular o Standardized Precipitation Index (SPI). Esse índice foi utilizado para avalicar a tendência de ocorrência de eventos extremos de precipitação na Bacia do Rio Jundiaí.
